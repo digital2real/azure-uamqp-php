@@ -26,7 +26,7 @@ OBJECTS = $(SOURCES:%.cpp=%.o)
 all: ${OBJECTS} ${EXTENSION} ## compile extension where u're running make
 
 ${EXTENSION}: ${OBJECTS}
-              ${LINKER} ${LINKER_FLAGS} -o $@ ${OBJECTS} ${LINKER_DEPENDENCIES}
+    ${LINKER} ${LINKER_FLAGS} -o $@ ${OBJECTS} ${LINKER_DEPENDENCIES}
 
 ${OBJECTS}:
     ${COMPILER} ${COMPILER_FLAGS} $@ ${@:%.o=%.cpp}
