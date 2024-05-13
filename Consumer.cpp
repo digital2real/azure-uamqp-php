@@ -36,7 +36,8 @@ Consumer::Consumer(Session *session, std::string resourceName)
     this->session = session;
     this->resourceName = resourceName;
 
-    source = messaging_create_source(("amqps://" + session->getConnection()->getHost() + "/" + resourceName).c_str());
+    // source = messaging_create_source(("amqps://" + session->getConnection()->getHost() + "/" + resourceName).c_str());
+    source = messaging_create_source((resourceName).c_str());
     target = messaging_create_target("ingress-rx");
     link = link_create(session->getSessionHandler(), "receiver-link", role_receiver, source, target);
     link_set_rcv_settle_mode(link, receiver_settle_mode_first);
