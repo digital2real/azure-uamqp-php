@@ -2,7 +2,7 @@
 
 static Php::Value get_value_from_map(AMQP_VALUE map, const char* key, const char type)
 {
-    AMQP_VALUE amqp_value_value = amqpvalue_get_map_value(map, amqpvalue_create_symbol(key));
+    AMQP_VALUE amqp_value_value = amqpvalue_get_map_value(map, amqpvalue_create_string(key));
     Php::Value result;
 
     const char* valueString = NULL;
