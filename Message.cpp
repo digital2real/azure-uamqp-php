@@ -36,47 +36,51 @@ static Php::Value get_value_from_map(AMQP_VALUE map, const char* key, const char
 
     return result;
 }
-static void add_map_item(AMQP_VALUE map, const char* name, AMQP_VALUE amqp_value_value)
+static void add_map_item(AMQP_VALUE map, const char* name, AMQP_VALUE amqp_value_value, bool isApplicationProperty)
 {
-    AMQP_VALUE amqp_value_name = amqpvalue_create_string(name);
+    if (isApplicationProperty) {
+        AMQP_VALUE amqp_value_name = amqpvalue_create_string(name);
+    } else {
+        AMQP_VALUE amqp_value_name = amqpvalue_create_symbol(name);
+    }
     amqpvalue_set_map_value(map, amqp_value_name, amqp_value_value);
     amqpvalue_destroy(amqp_value_value);
     amqpvalue_destroy(amqp_value_name);
 }
-static void add_map_string(AMQP_VALUE map, const char* name, const char* value)
+static void add_map_string(AMQP_VALUE map, const char* name, const char* value, bool isApplicationProperty)
 {
     AMQP_VALUE amqp_value_value = amqpvalue_create_string(value);
-    add_map_item(map, name, amqp_value_value);
+    add_map_item(map, name, amqp_value_value, isApplicationProperty);
 }
-static void add_map_timestamp(AMQP_VALUE map, const char* name, int64_t value)
+static void add_map_timestamp(AMQP_VALUE map, const char* name, int64_t value, bool isApplicationProperty)
 {
     AMQP_VALUE amqp_value_value = amqpvalue_create_timestamp(value);
-    add_map_item(map, name, amqp_value_value);
+    add_map_item(map, name, amqp_value_value, isApplicationProperty);
 }
-static void add_map_int(AMQP_VALUE map, const char* name, int32_t value)
+static void add_map_int(AMQP_VALUE map, const char* name, int32_t value, bool isApplicationProperty)
 {
     AMQP_VALUE amqp_value_value = amqpvalue_create_int(value);
-    add_map_item(map, name, amqp_value_value);
+    add_map_item(map, name, amqp_value_value, isApplicationProperty);
 }
-static void add_map_double(AMQP_VALUE map, const char* name, double value)
+static void add_map_double(AMQP_VALUE map, const char* name, double value, bool isApplicationProperty)
 {
     AMQP_VALUE amqp_value_value = amqpvalue_create_double(value);
-    add_map_item(map, name, amqp_value_value);
+    add_map_item(map, name, amqp_value_value, isApplicationProperty);
 }
-static void add_map_value(AMQP_VALUE map, const char* key, const char type, Php::Value value)
+static void add_map_value(AMQP_VALUE map, const char* key, const char type, Php::Value value, bool isApplicationProperty)
 {
     switch (type) {
         case 'I':
-            add_map_int(map, key, static_cast<int32_t>(value));
+            add_map_int(map, key, static_cast<int32_t>(value), isApplicationProperty);
             break;
         case 'S':
-            add_map_string(map, key, value.stringValue().c_str());
+            add_map_string(map, key, value.stringValue().c_str(), isApplicationProperty);
             break;
         case 'T':
-            add_map_timestamp(map, key, static_cast<int64_t>(value));
+            add_map_timestamp(map, key, static_cast<int64_t>(value), isApplicationProperty);
             break;
         case 'D':
-            add_map_double(map, key, static_cast<double>(value));
+            add_map_double(map, key, static_cast<double>(value), isApplicationProperty);
             break;
     }
 }
@@ -210,12 +214,12 @@ Php::Value Message::getMessageAnnotation(Php::Parameters &params)
 
 void Message::setApplicationProperty(Php::Parameters &params)
 {
-    add_map_value(application_properties, params[0].stringValue().c_str(), params[1].stringValue().at(0), params[2]);
+    add_map_value(application_properties, params[0].stringValue().c_str(), params[1].stringValue().at(0), params[2], true);
 }
 
 void Message::setMessageAnnotation(Php::Parameters &params)
 {
-    add_map_value(annotations_map, params[0].stringValue().c_str(), params[1].stringValue().at(0), params[2]);
+    add_map_value(annotations_map, params[0].stringValue().c_str(), params[1].stringValue().at(0), params[2], false);
 }
 
 MESSAGE_HANDLE Message::getMessageHandler()
