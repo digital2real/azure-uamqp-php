@@ -40,12 +40,15 @@ static void add_map_item(AMQP_VALUE map, const char* name, AMQP_VALUE amqp_value
 {
     if (isApplicationProperty) {
         AMQP_VALUE amqp_value_name = amqpvalue_create_string(name);
+        amqpvalue_set_map_value(map, amqp_value_name, amqp_value_value);
+        amqpvalue_destroy(amqp_value_value);
+        amqpvalue_destroy(amqp_value_name);
     } else {
         AMQP_VALUE amqp_value_name = amqpvalue_create_symbol(name);
+        amqpvalue_set_map_value(map, amqp_value_name, amqp_value_value);
+        amqpvalue_destroy(amqp_value_value);
+        amqpvalue_destroy(amqp_value_name);
     }
-    amqpvalue_set_map_value(map, amqp_value_name, amqp_value_value);
-    amqpvalue_destroy(amqp_value_value);
-    amqpvalue_destroy(amqp_value_name);
 }
 static void add_map_string(AMQP_VALUE map, const char* name, const char* value, bool isApplicationProperty)
 {
