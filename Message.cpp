@@ -234,4 +234,60 @@ void Message::setMessageHandler(MESSAGE_HANDLE message)
 {
     this->message = message;
 }
+// amqpvalue_get_properties
+void Message::setProperty(Php::Parameters &params)
+{
+    std::string properties[13] = [
+        'message_id',
+        'user_id',
+        'to',
+        'subject',
+        'reply_to',
+        'correlation_id',
+        'content_type',
+        'content_encoding',
+        'absolute_expiry_time',
+        'creation_time',
+        'group_id',
+        'group_sequence',
+        'reply_to_group_id'
+    ];
 
+    int numProperty = -1;
+    std::string key = params[0].stringValue();
+    for (int i = 0; i < 13; i++) {
+        if (properties[i] == key) {
+            numProperty = i;
+            break;
+        }
+    }
+// properties_set_group_sequence
+    PROPERTIES_HANDLE properties_handle = properties_create();
+
+    switch (numProperty) {
+            case 0:
+                properties_set_message_id(properties_handle, amqpvalue_create_int(static_cast<int32_t>(params[1])));
+                break;
+            case 1:
+                throw Php::Exception("Property key user_id is not supported, because this property need implementation amqp_binary type");
+                break;
+            case 2:
+                properties_set_to(properties_handle, amqpvalue_create_string(params[1].stringValue().c_str()));
+                break;
+            case 3:
+                properties_set_subject(properties_handle, params[1].stringValue().c_str());
+                break;
+            case 5:
+                properties_set_correlation_id(properties_handle, amqpvalue_create_int(static_cast<int32_t>(params[1])));
+                break;
+            case 11:
+                throw Php::Exception("Property key group_sequence is not supported, because this property need implementation sequence_no type");
+                break;
+            default:
+                properties_destroy(properties_handle);
+                throw Php::Exception("Property key is not exist");
+        }
+
+    message_set_properties(message, properties_handle);
+    properties_destroy(properties_handle);
+}

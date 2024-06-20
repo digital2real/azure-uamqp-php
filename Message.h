@@ -28,6 +28,7 @@ public:
     void setApplicationProperty(Php::Parameters &params);
     Php::Value getMessageAnnotation(Php::Parameters &params);
     void setMessageAnnotation(Php::Parameters &params);
+    void setProperty(Php::Parameters &params);
 };
 
 #endif
