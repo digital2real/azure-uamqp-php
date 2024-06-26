@@ -238,19 +238,19 @@ void Message::setMessageHandler(MESSAGE_HANDLE message)
 void Message::setProperty(Php::Parameters &params)
 {
     std::string properties[13] = [
-        'message_id',
-        'user_id',
-        'to',
-        'subject',
-        'reply_to',
-        'correlation_id',
-        'content_type',
-        'content_encoding',
-        'absolute_expiry_time',
-        'creation_time',
-        'group_id',
-        'group_sequence',
-        'reply_to_group_id'
+        "message_id",
+        "user_id",
+        "to",
+        "subject",
+        "reply_to",
+        "correlation_id",
+        "content_type",
+        "content_encoding",
+        "absolute_expiry_time",
+        "creation_time",
+        "group_id",
+        "group_sequence",
+        "reply_to_group_id"
     ];
 
     int numProperty = -1;
