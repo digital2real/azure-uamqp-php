@@ -105,6 +105,9 @@ Message::Message()
 
     message_set_application_properties(message, application_properties);
     add_amqp_message_annotation(message, annotations_map);
+
+    // properties_set_group_sequence
+    PROPERTIES_HANDLE properties_handle = properties_create();
 }
 
 void Message::__construct(Php::Parameters &params)
@@ -261,8 +264,6 @@ void Message::setProperty(Php::Parameters &params)
             break;
         }
     }
-// properties_set_group_sequence
-    PROPERTIES_HANDLE properties_handle = properties_create();
 
     switch (numProperty) {
             case 0:
@@ -287,7 +288,4 @@ void Message::setProperty(Php::Parameters &params)
                 properties_destroy(properties_handle);
                 throw Php::Exception("Property key is not exist");
         }
-
-    message_set_properties(message, properties_handle);
-    properties_destroy(properties_handle);
 }
