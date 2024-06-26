@@ -237,7 +237,7 @@ void Message::setMessageHandler(MESSAGE_HANDLE message)
 // amqpvalue_get_properties
 void Message::setProperty(Php::Parameters &params)
 {
-    std::string properties[13] = [
+    std::string* properties =  new std::string[13] {
         "message_id",
         "user_id",
         "to",
@@ -251,7 +251,7 @@ void Message::setProperty(Php::Parameters &params)
         "group_id",
         "group_sequence",
         "reply_to_group_id"
-    ];
+    };
 
     int numProperty = -1;
     std::string key = params[0].stringValue();
