@@ -63,7 +63,7 @@ void Producer::publish(Message *message)
     MESSAGE_HANDLE msg = message->getMessageHandler();
     sent_messages = 0;
 
-    message_set_properties(msg, msg->properties_handle);
+    message_set_properties(msg, message->properties_handle);
 
     if (messagesender_open(message_sender) != 0) {
         throw Php::Exception("Error creating messaging sender");
@@ -80,7 +80,7 @@ void Producer::publish(Message *message)
             break;
         }
     }
-    properties_destroy(properties_handle);
+    properties_destroy(message->properties_handle);
     message_destroy(msg);
     messagesender_destroy(message_sender);
     link_destroy(link);

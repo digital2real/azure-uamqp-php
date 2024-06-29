@@ -96,6 +96,8 @@ static void add_amqp_message_annotation(MESSAGE_HANDLE message, AMQP_VALUE msg_a
     annotations_destroy(msg_annotations);
 }
 
+PROPERTIES_HANDLE properties_handle;
+
 Message::Message()
 {
     message = message_create();
@@ -107,7 +109,7 @@ Message::Message()
     add_amqp_message_annotation(message, annotations_map);
 
     // properties_set_group_sequence
-    PROPERTIES_HANDLE properties_handle = properties_create();
+    properties_handle = properties_create();
 }
 
 void Message::__construct(Php::Parameters &params)
@@ -118,10 +120,11 @@ void Message::__construct(Php::Parameters &params)
 Php::Value Message::getBody()
 {
     if (body.empty()) {
-        message_get_body_amqp_data_in_place(message, 0, &binary_data);
-        for (size_t i = 0; i < binary_data.length; ++i) {
-            body += binary_data.bytes[i];
-        }
+        AMQP_VALUE body_data;
+        message_get_body_amqp_value_in_place(message, &body_data);
+        const char* result;
+        amqpvalue_get_string(body_data, &result);
+        body = result;
     }
 
     return body;
@@ -131,16 +134,11 @@ void Message::setBody(std::string body)
 {
     this->body = body;
 
-    unsigned char bodyCharArray[body.size()];
-    for (unsigned int i = 0; i < body.size(); i++) {
-        bodyCharArray[i] = body.at(i);
-    }
-    binary_data.bytes = bodyCharArray;
-    binary_data.length = sizeof(bodyCharArray);
-    message_add_body_amqp_data(message, binary_data);
+    AMQP_VALUE amqp_value = amqpvalue_create_string(body.c_str());
+    message_set_body_amqp_value(message, amqp_value);
 }
 
-static AMQP_VALUE application_properties_map;
+AMQP_VALUE application_properties_map;
 
 Php::Value Message::getApplicationProperty(Php::Parameters &params)
 {
@@ -178,7 +176,7 @@ Php::Value Message::getApplicationProperties()
         double valueDouble;
 
         amqpvalue_get_map_key_value_pair(application_properties_map, i, &map_key_name, &map_key_value);
-        amqpvalue_get_symbol(map_key_name, &key_name);
+        amqpvalue_get_string(map_key_name, &key_name);
         switch (amqpvalue_get_type(map_key_value)) {
             default:
                 LogError("Unknown AMQP type");
@@ -267,7 +265,8 @@ void Message::setProperty(Php::Parameters &params)
 
     switch (numProperty) {
             case 0:
-                properties_set_message_id(properties_handle, amqpvalue_create_int(static_cast<int32_t>(params[1])));
+                //properties_set_message_id(properties_handle, amqpvalue_create_int(static_cast<int32_t>(params[1])));
+                properties_set_message_id(properties_handle, amqpvalue_create_string(params[1].stringValue().c_str()));
                 break;
             case 1:
                 throw Php::Exception("Property key user_id is not supported, because this property need implementation amqp_binary type");
@@ -278,11 +277,33 @@ void Message::setProperty(Php::Parameters &params)
             case 3:
                 properties_set_subject(properties_handle, params[1].stringValue().c_str());
                 break;
+            case 4:
+                properties_set_reply_to(properties_handle, amqpvalue_create_string(params[1].stringValue().c_str()));
+                break;
             case 5:
-                properties_set_correlation_id(properties_handle, amqpvalue_create_int(static_cast<int32_t>(params[1])));
+                //properties_set_correlation_id(properties_handle, amqpvalue_create_int(static_cast<int32_t>(params[1])));
+                properties_set_correlation_id(properties_handle, amqpvalue_create_string(params[1].stringValue().c_str()));
+                break;
+            case 6:
+                properties_set_content_type(properties_handle, params[1].stringValue().c_str());
+                break;
+            case 7:
+                properties_set_content_encoding(properties_handle, params[1].stringValue().c_str());
+                break;
+            case 8:
+                properties_set_absolute_expiry_time(properties_handle, static_cast<int64_t>(params[1]));
+                break;
+            case 9:
+                properties_set_creation_time(properties_handle, static_cast<int64_t>(params[1]));
+                break;
+            case 10:
+                properties_set_group_id(properties_handle, params[1].stringValue().c_str());
                 break;
             case 11:
                 throw Php::Exception("Property key group_sequence is not supported, because this property need implementation sequence_no type");
+                break;
+            case 12:
+                properties_set_reply_to_group_id(properties_handle, params[1].stringValue().c_str());
                 break;
             default:
                 properties_destroy(properties_handle);
