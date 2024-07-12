@@ -26,18 +26,34 @@ static AMQP_VALUE on_message_received(const void* context, MESSAGE_HANDLE messag
     (void)context;
     Message *msg = new Message();
     msg->setMessageHandler(message);
+
     (*callbackFn)(Php::Object("Azure\\uAMQP\\Message", msg));
 
     return messaging_delivery_accepted();
 }
 
-Consumer::Consumer(Session *session, std::string resourceName)
+Consumer::Consumer(Session *session, std::string resourceName, std::string filter)
 {
     this->session = session;
     this->resourceName = resourceName;
 
-    // source = messaging_create_source(("amqps://" + session->getConnection()->getHost() + "/" + resourceName).c_str());
-    source = messaging_create_source((resourceName).c_str());
+    if (filter.empty()) {
+        source = messaging_create_source((resourceName).c_str());
+    } else {
+        auto filterSet = amqpvalue_create_filter_set(amqpvalue_create_map());
+        auto selectorFilterKey = amqpvalue_create_symbol("apache.org:selector-filter:string");
+        auto selectorKey = amqpvalue_create_symbol("apache.org:selector-filter:string");
+
+        auto filterEntryValue = amqpvalue_create_string(filter.c_str());
+        auto filterEntry =  amqpvalue_create_described(selectorFilterKey, filterEntryValue);
+        amqpvalue_set_map_value(filterSet, selectorKey, filterEntry);
+
+        auto newSource = source_create();
+        source_set_address(newSource, amqpvalue_create_string((resourceName).c_str()));
+        source_set_filter(newSource, filterSet);
+        source = amqpvalue_create_source(newSource);
+    }
+
     target = messaging_create_target("ingress-rx");
     link = link_create(session->getSessionHandler(), "receiver-link", role_receiver, source, target);
     link_set_rcv_settle_mode(link, receiver_settle_mode_first);

@@ -108,7 +108,6 @@ Message::Message()
     message_set_application_properties(message, application_properties);
     add_amqp_message_annotation(message, annotations_map);
 
-    // properties_set_group_sequence
     properties_handle = properties_create();
 }
 
@@ -120,20 +119,48 @@ void Message::__construct(Php::Parameters &params)
 Php::Value Message::getBody()
 {
     if (body.empty()) {
-        AMQP_VALUE body_data;
-        message_get_body_amqp_value_in_place(message, &body_data);
-        const char* result;
-        amqpvalue_get_string(body_data, &result);
-        body = result;
+
+        MESSAGE_BODY_TYPE body_type;
+        if (message_get_body_type(message, &body_type) != 0 && body_type != MESSAGE_BODY_TYPE_VALUE) {
+
+            BINARY_DATA body_data;
+            if (message_get_body_amqp_data_in_place(message, 0, &body_data) != 0 ) {
+                throw Php::Exception("Unsupported body type");
+            }
+            for (size_t i = 0; i < body_data.length; ++i) {
+                body += (unsigned char)body_data.bytes[i];
+            }
+            return body;
+        }
+
+        AMQP_VALUE body_value;
+        message_get_body_amqp_value_in_place(message, &body_value);
+
+        AMQP_TYPE amqp_type = amqpvalue_get_type(body_value);
+        if (amqp_type == AMQP_TYPE_SYMBOL || amqp_type == AMQP_TYPE_STRING) {
+            const char* result = amqpvalue_to_string(body_value);
+            body = result;
+            return body;
+        }
+
+        if (amqp_type == AMQP_TYPE_BINARY) {
+            amqp_binary binary_value;
+            if (amqpvalue_get_binary(body_value, &binary_value) != 0) {
+                throw Php::Exception("Unsupported body type");
+            }
+            for (uint64_t i = 0; i < binary_value.length; ++i) {
+                body += ((char*)binary_value.bytes)[i];
+            }
+
+            return body;
+        }
     }
 
-    return body;
 }
 
 void Message::setBody(std::string body)
 {
     this->body = body;
-
     AMQP_VALUE amqp_value = amqpvalue_create_string(body.c_str());
     message_set_body_amqp_value(message, amqp_value);
 }
@@ -235,10 +262,13 @@ void Message::setMessageHandler(MESSAGE_HANDLE message)
 {
     this->message = message;
 }
-// amqpvalue_get_properties
+
 void Message::setProperty(Php::Parameters &params)
 {
-    std::string* properties =  new std::string[13] {
+    int numProperty = -1;
+    std::string key = params[0].stringValue();
+
+    std::string* propertyKeys = new std::string[13] {
         "message_id",
         "user_id",
         "to",
@@ -254,10 +284,8 @@ void Message::setProperty(Php::Parameters &params)
         "reply_to_group_id"
     };
 
-    int numProperty = -1;
-    std::string key = params[0].stringValue();
     for (int i = 0; i < 13; i++) {
-        if (properties[i] == key) {
+        if (propertyKeys[i] == key) {
             numProperty = i;
             break;
         }
@@ -309,4 +337,131 @@ void Message::setProperty(Php::Parameters &params)
                 properties_destroy(properties_handle);
                 throw Php::Exception("Property key is not exist");
         }
+}
+
+
+
+/*static Php::Value getPropertyKeys()
+{
+    return propertyKeys;
+}*/
+
+Php::Value Message::getProperty(Php::Parameters &params)
+{
+   //
+    std::string key = params[0].stringValue();
+
+    std::string* propertyKeys = new std::string[13] {
+        "message_id",
+        "user_id",
+        "to",
+        "subject",
+        "reply_to",
+        "correlation_id",
+        "content_type",
+        "content_encoding",
+        "absolute_expiry_time",
+        "creation_time",
+        "group_id",
+        "group_sequence",
+        "reply_to_group_id"
+    };
+
+    int numProperty = -1;
+    for (int i = 0; i < 13; i++) {
+        if (propertyKeys[i] == key) {
+            numProperty = i;
+            break;
+        }
+    }
+
+    /*AMQP_VALUE correlation_id_value;
+    uint64_t correlation_id;
+
+    properties_get_correlation_id(properties_handle, &correlation_id_value);
+    amqpvalue_get_ulong(correlation_id_value, &correlation_id);
+
+    return std::to_string(correlation_id);*/
+    AMQP_VALUE amqp_value;
+    const char* string_value;
+    int64_t timestamp_value;
+    uint64_t unsigned_int_value;
+    std::string result;
+
+    PROPERTIES_HANDLE properties;
+
+    message_get_properties(message, &properties);
+
+    switch (numProperty) {
+            case 0:
+                if (properties_get_message_id(properties, &amqp_value) == 0) {
+                    amqpvalue_get_string(amqp_value, &string_value);
+                    result = string_value;
+                }
+                break;
+            case 1:
+                throw Php::Exception("Property key user_id is not supported, because this property need implementation amqp_binary type");
+                break;
+            case 2:
+                if (properties_get_to(properties, &amqp_value) == 0) {
+                    amqpvalue_get_string(amqp_value, &string_value);
+                    result = string_value;
+                }
+                break;
+            case 3:
+                if (properties_get_subject(properties, &string_value) == 0) {
+                    result = string_value;
+                }
+                break;
+            case 4:
+                if (properties_get_reply_to(properties, &amqp_value) == 0) {
+                    amqpvalue_get_string(amqp_value, &string_value);
+                    result = string_value;
+                }
+                break;
+            case 5:
+                if (properties_get_correlation_id(properties, &amqp_value) == 0) {
+                    amqpvalue_get_string(amqp_value, &string_value);
+                    result = string_value;
+                }
+                break;
+            case 6:
+                if (properties_get_content_type(properties, &string_value) == 0) {
+                    result = string_value;
+                }
+                break;
+            case 7:
+                if (properties_get_content_encoding(properties, &string_value) == 0) {
+                    result = string_value;
+                }
+                break;
+            case 8:
+                if (properties_get_absolute_expiry_time(properties, &timestamp_value) == 0) {
+                    result = std::to_string(timestamp_value);
+                }
+                break;
+            case 9:
+                if (properties_get_creation_time(properties, &timestamp_value) == 0) {
+                    result = std::to_string(timestamp_value);
+                }
+                break;
+            case 10:
+                if (properties_get_group_id(properties, &string_value) == 0) {
+                    result = string_value;
+                }
+                break;
+            case 11:
+                throw Php::Exception("Property key group_sequence is not supported, because this property need implementation sequence_no type");
+                break;
+            case 12:
+                if (properties_get_reply_to_group_id(properties, &string_value) == 0) {
+                    result = string_value;
+                }
+                break;
+            default:
+                properties_destroy(properties);
+                throw Php::Exception("Property key is not exist");
+        }
+     //   amqpvalue_destroy(amqp_value);
+        return result;
 }

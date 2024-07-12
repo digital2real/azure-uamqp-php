@@ -27,7 +27,8 @@ extern "C" {
         connection.method<&Connection::setCallback>("setCallback", {
             Php::ByVal("resourceName", Php::Type::String),
             Php::ByVal("callback", Php::Type::Callable),
-            Php::ByVal("loopFn", Php::Type::Callable)
+            Php::ByVal("loopFn", Php::Type::Callable),
+            Php::ByVal("filter", Php::Type::String)
         });
         connection.method<&Connection::consume>("consume");
         connection.method<&Connection::close>("close");
@@ -60,6 +61,12 @@ extern "C" {
             Php::ByVal("key", Php::Type::String),
             Php::ByVal("value", Php::Type::String)
         });
+
+        message.method<&Message::getProperty>("getProperty", {
+             Php::ByVal("key", Php::Type::String)
+        });
+
+       // message.method<&Message::getPropertyKeys>("getPropertyKeys");
 
         extension.add(std::move(connection));
         extension.add(std::move(message));
