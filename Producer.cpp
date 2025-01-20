@@ -5,6 +5,9 @@
 #include "azure_uamqp_c/uamqp.h"
 #include "Session.h"
 #include "Message.h"
+#include <time.h>
+
+#include <stdio.h>
 
 static unsigned int sent_messages = 0;
 static bool producerStopRunning = false;
@@ -62,15 +65,16 @@ void Producer::publish(Message *message)
     MESSAGE_HANDLE msg = message->getMessageHandler();
     sent_messages = 0;
 
-    message_set_properties(msg, message->properties_handle);
+    message_set_properties(msg, message->getPropertiesHandle());
 
     if (messagesender_open(message_sender) != 0) {
         throw Php::Exception("Error creating messaging sender");
     }
 
-    (void)messagesender_send_async(message_sender, msg, on_message_send_complete, msg, 10000);
-
-    while (!producerStopRunning)
+    int timeout = session->getConnection()->getTimeout();
+    (void)messagesender_send_async(message_sender, msg, on_message_send_complete, msg, timeout);
+    clock_t expireTime = clock() + timeout * CLOCKS_PER_SEC;
+    while (!producerStopRunning && (clock() < expireTime || timeout == -1))
     {
         session->getConnection()->doWork();
 
@@ -79,7 +83,7 @@ void Producer::publish(Message *message)
             break;
         }
     }
-    properties_destroy(message->properties_handle);
+
     message_destroy(msg);
     messagesender_destroy(message_sender);
     link_destroy(link);
@@ -87,5 +91,8 @@ void Producer::publish(Message *message)
     session->getConnection()->close();
     if (!producerExceptionMessage.empty()) {
         throw Php::Exception(producerExceptionMessage);
+    }
+    if (timeout != -1 && clock() >= expireTime) {
+        throw Php::Exception("Produce timeout expired");
     }
 }

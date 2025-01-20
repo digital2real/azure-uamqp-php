@@ -11,12 +11,13 @@
 
 void Connection::__construct(Php::Parameters &params)
 {
-    host    = params[0].stringValue();
-    port    = params[1].numericValue();
-    useTls  = params[2].boolValue();
-    keyName = params[3].stringValue();
-    key     = params[4].stringValue();
-    debug   = params.size() == 6 ? params[5].boolValue() : false;
+    host      = params[0].stringValue();
+    port      = params[1].numericValue();
+    useTls    = params[2].boolValue();
+    keyName   = params[3].stringValue();
+    key       = params[4].stringValue();
+    debug     = params[5].boolValue();
+    timeout   = params[6].numericValue();
 }
 
 void Connection::connect()
@@ -28,7 +29,7 @@ void Connection::connect()
     bool useAuth = !keyName.empty() && !key.empty();
 
     if (platform_init() != 0) {
-        //throw Php::Exception("Could not run platform_init");
+        throw Php::Exception("Could not run platform_init");
     }
 
     if (useTls) {
@@ -76,6 +77,7 @@ void Connection::publish(Php::Parameters &params)
 
     Producer *producer = new Producer(session, resourceName);
     producer->publish(message);
+    delete producer;
 }
 
 void Connection::setCallback(Php::Parameters &params)
@@ -118,17 +120,25 @@ bool Connection::isDebugOn()
     return debug;
 }
 
+int Connection::getTimeout()
+{
+    return timeout;
+}
+
 void Connection::close()
 {
     if (consumer != NULL && !consumer->wasCloseRequested()) {
         consumer->close();
+        delete consumer;
     }
 
     if (!closeRequested) {
         closeRequested = true;
+        delete session;
         connection_destroy(connection);
         xio_destroy(sasl_io);
         xio_destroy(tls_io);
+        xio_destroy(socket_io);
         saslmechanism_destroy(sasl_mechanism_handle);
         platform_deinit();
     }

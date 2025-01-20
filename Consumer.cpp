@@ -21,12 +21,10 @@ static void on_link_detach_received_consumer(void* context, ERROR_HANDLE error)
     consumerStopRunning = true;
 }
 
-static AMQP_VALUE on_message_received(const void* context, MESSAGE_HANDLE message)
+AMQP_VALUE on_message_received(const void* context, MESSAGE_HANDLE message)
 {
     (void)context;
-    Message *msg = new Message();
-    msg->setMessageHandler(message);
-
+    Message *msg = new Message(message);
     (*callbackFn)(Php::Object("Azure\\uAMQP\\Message", msg));
 
     return messaging_delivery_accepted();
@@ -101,6 +99,7 @@ void Consumer::close()
     link_destroy(link);
     session->close();
     session->getConnection()->close();
+
     if (!consumerExceptionMessage.empty()) {
         throw Php::Exception(consumerExceptionMessage);
     }

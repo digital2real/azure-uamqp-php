@@ -20,17 +20,20 @@ Using web-console Red Hat Artemis,
 3.1. Clone the project to a convenient location
 ```git clone https://github.com/Hnakra/azure-uamqp-php.git```
 
-3.2 Navigate to the directory with examples
-```cd example```
+3.2 Navigate to the directory
+```cd example azure-uamqp-php```
 
 3.3 Run it by executing the command at the root of the project
-```docker-compose up -d```
+```docker-compose -f docker-compose.redhat-os.yml up -d```
 
 3.4 Create a src/parameters.php file based on the src/parameters.php.dist file with your connection parameters to the broker.
 ```copy src/parameters.php.dist src/parameters.php```
 
-3.5 Access the azure-uamqp-php-build container using any method convenient for you, for example:
-```docker exec -it azure-amq bash```
+3.5 Access the azure-uamqp-php container using any method convenient for you, for example:
+```docker exec -it azure-amq-redhat bash```
+
+3.6 Build the program
+```cd azure-uamqp-php && make clean && make && make install```
 
 3.6 Navigate to the directory with examples
 ```cd /var/www/html/example```

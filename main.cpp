@@ -37,22 +37,14 @@ extern "C" {
         message.method<&Message::__construct>("__construct", {
             Php::ByVal("body", Php::Type::String)
         });
+        message.method<&Message::__destruct>("__destruct");
         message.method<&Message::getBody>("getBody");
         message.method<&Message::getApplicationProperty>("getApplicationProperty", {
             Php::ByVal("key", Php::Type::String),
             Php::ByVal("type", Php::Type::String)
         });
         message.method<&Message::getApplicationProperties>("getApplicationProperties");
-        message.method<&Message::getMessageAnnotation>("getMessageAnnotation", {
-            Php::ByVal("key", Php::Type::String),
-            Php::ByVal("type", Php::Type::String)
-        });
         message.method<&Message::setApplicationProperty>("setApplicationProperty", {
-            Php::ByVal("key", Php::Type::String),
-            Php::ByVal("type", Php::Type::String),
-            Php::ByVal("value", Php::Type::String)
-        });
-        message.method<&Message::setMessageAnnotation>("setMessageAnnotation", {
             Php::ByVal("key", Php::Type::String),
             Php::ByVal("type", Php::Type::String),
             Php::ByVal("value", Php::Type::String)
@@ -65,8 +57,6 @@ extern "C" {
         message.method<&Message::getProperty>("getProperty", {
              Php::ByVal("key", Php::Type::String)
         });
-
-       // message.method<&Message::getPropertyKeys>("getPropertyKeys");
 
         extension.add(std::move(connection));
         extension.add(std::move(message));

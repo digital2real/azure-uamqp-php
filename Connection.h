@@ -21,6 +21,7 @@ private:
     bool debug;
     bool isConnected = false;
     bool closeRequested = false;
+    int timeout;
 
     Session *session;
     Consumer *consumer;
@@ -52,6 +53,7 @@ public:
     CONNECTION_HANDLE getConnectionHandler();
     void doWork();
     bool isDebugOn();
+    int getTimeout();
 };
 
 #endif

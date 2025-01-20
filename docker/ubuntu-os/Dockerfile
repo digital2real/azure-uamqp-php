@@ -28,8 +28,10 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.29.0/cmake-3.29.0
 
 WORKDIR /var/www
 
+    # we use commit bb156d9 because commit ac28f7b uses function add_vld_if_defined which breaks the build
 RUN git clone https://github.com/Azure/macro-utils-c \
     && cd macro-utils-c/build \
+    && git reset --hard bb156d9 \
     && cmake .. \
     && cmake --build . --target install
 
@@ -58,8 +60,10 @@ RUN git clone https://github.com/CopernicaMarketingSoftware/PHP-CPP \
     # move uamqp lib
 RUN mv /usr/local/include/azureiot/azure_uamqp_c /usr/local/include
 
-    # make library for php
-RUN git clone https://github.com/hnakra/azure-uamqp-php.git \
-    && cd azure-uamqp-php \
-    && make \
-    && make install
+RUN wget https://sourceware.org/pub/valgrind/valgrind-3.24.0.tar.bz2 \
+    && tar xvjf valgrind-3.24.0.tar.bz2 \
+    && cd valgrind-3.24.0 \
+    && ./configure \
+    && make  \
+    && make install \
+

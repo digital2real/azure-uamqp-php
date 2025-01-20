@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+    amq-client-ubuntu-os:
+        image: hnakra/azure-uamqp-php-build-ubuntu-os:1.0.0
+        container_name: azure-amq-ubuntu
+        build: ./docker/ubuntu-os
+        stdin_open: true
+        tty: true
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        volumes:
+            - ./src:/var/www/html/example
+            - .:/var/www/azure-uamqp-php
+        # command: bash -c "cd azure-uamqp-php && make clean && make && make install"

@@ -7,22 +7,21 @@ class Message : public Php::Base
 {
 private:
     std::string body;
+    AMQP_VALUE application_properties_map;
+    PROPERTIES_HANDLE properties_handle;
     MESSAGE_HANDLE message;
     AMQP_VALUE application_properties;
-    AMQP_VALUE annotations_map;
-    Php::Value applicationPropertiesMap;
-    // std::string* propertyKeys;
 
 public:
     Message();
+    Message(MESSAGE_HANDLE msg);
     virtual ~Message() = default;
-    PROPERTIES_HANDLE properties_handle;
-
     void setMessageHandler(MESSAGE_HANDLE message);
     MESSAGE_HANDLE getMessageHandler();
+    PROPERTIES_HANDLE getPropertiesHandle();
     void setBody(std::string body);
-
     void __construct(Php::Parameters &params);
+    void __destruct();
     Php::Value getBody();
     Php::Value getApplicationProperty(Php::Parameters &params);
     Php::Value getApplicationProperties();
@@ -31,7 +30,6 @@ public:
     void setMessageAnnotation(Php::Parameters &params);
     void setProperty(Php::Parameters &params);
     Php::Value getProperty(Php::Parameters &params);
-    //Php::Value getPropertyKeys();
 };
 
 #endif

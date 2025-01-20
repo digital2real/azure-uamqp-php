@@ -1,3 +1,4 @@
 *.o
 *.so
-example/src/parameters.php
+src/parameters.php
+/src/parameters.php
