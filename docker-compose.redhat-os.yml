@@ -2,7 +2,7 @@ version: '3'
 
 services:
     amq-client-redhat-os:
-        image: hnakra/azure-uamqp-php-build-redhat-os:1.0.0
+        image: hnakra/azure-uamqp-php-build-redhat-os:1.0.1
         container_name: azure-amq-redhat
         build: ./docker/redhat-os
         stdin_open: true

@@ -2,7 +2,7 @@ version: '3'
 
 services:
     amq-client-ubuntu-os:
-        image: hnakra/azure-uamqp-php-build-ubuntu-os:1.0.0
+        image: hnakra/azure-uamqp-php-build-ubuntu-os:1.0.1
         container_name: azure-amq-ubuntu
         build: ./docker/ubuntu-os
         stdin_open: true
