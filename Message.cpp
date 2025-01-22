@@ -95,7 +95,6 @@ Message::Message()
     message = message_create();
     application_properties = amqpvalue_create_map();
     message_set_application_properties(message, application_properties);
-    application_properties_map = amqpvalue_get_inplace_described_value(application_properties);
     properties_handle = properties_create();
 }
 

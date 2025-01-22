@@ -33,7 +33,7 @@ Using web-console Red Hat Artemis,
 ```docker exec -it azure-amq-redhat bash```
 
 3.6 Build the program
-```cd azure-uamqp-php && make clean && make && make install```
+```cd /var/www/azure-uamqp-php && make clean && make && make install```
 
 3.6 Navigate to the directory with examples
 ```cd /var/www/html/example```
